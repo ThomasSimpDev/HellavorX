@@ -1,0 +1,140 @@
+@page "/profile/{username}"
+@using HellavorX.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<PageTitle>@(user?.Name ?? "Profile") - HellavorX</PageTitle>
+
+@if (user != null)
+{
+    <div class="max-w-3xl mx-auto space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="h-32 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+            <div class="px-6 pb-6">
+                <div class="flex items-end gap-4 -mt-16 mb-4">
+                    <img src="@(user.ProfilePictureUrl ?? "/favicon.png")" class="w-32 h-32 rounded-full object-cover ring-4 ring-white shadow-lg" />
+                    <div class="flex-1 mt-16">
+                        <h2 class="text-2xl font-bold text-gray-900">@user.Name</h2>
+                        <p class="text-gray-600">@@@user.UserName</p>
+                    </div>
+                    @if (isOwnProfile)
+                    {
+                        <button class="px-6 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition mt-16" @onclick="ToggleEdit">Edit Profile</button>
+                    }
+                </div>
+                
+                @if (!string.IsNullOrEmpty(user.Bio))
+                {
+                    <p class="text-gray-700 leading-relaxed">@user.Bio</p>
+                }
+            </div>
+        </div>
+
+        @if (showEditForm && isOwnProfile)
+        {
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-xl font-semibold mb-4">Edit Profile</h3>
+                <EditForm Model="editModel" OnValidSubmit="UpdateProfile" class="space-y-4">
+                    <div>
+                        <label class="block mb-2 font-medium text-gray-700">Name</label>
+                        <InputText @bind-Value="editModel.Name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    </div>
+                    
+                    <div>
+                        <label class="block mb-2 font-medium text-gray-700">Bio</label>
+                        <InputTextArea @bind-Value="editModel.Bio" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" rows="3" />
+                    </div>
+                    
+                    <div>
+                        <label class="block mb-2 font-medium text-gray-700">Profile Picture</label>
+                        <InputFile OnChange="HandleProfilePicture" class="w-full" accept="image/*" />
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:opacity-50" disabled="@isUpdating">
+                            @(isUpdating ? "Updating..." : "Save")
+                        </button>
+                        <button type="button" class="px-6 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition" @onclick="ToggleEdit">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        }
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 class="text-xl font-semibold mb-4">Posts</h3>
+            <div class="space-y-4">
+                @foreach (var post in userPosts)
+                {
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition relative">
+                        <div class="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>@post.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+
+                        @if (isOwnProfile)
+                        {
+                            <div class="absolute top-3 right-3 flex gap-2">
+                                <button class="text-sm text-blue-600 hover:underline" @onclick="() => StartEdit(post)">Edit</button>
+                                <button class="text-sm text-red-600 hover:underline" @onclick="() => DeletePost(post.Id)">Delete</button>
+                            </div>
+                        }
+
+                        @if (editPostId == post.Id)
+                        {
+                            <EditForm Model="editModelPost" OnValidSubmit="() => SaveEdit(post.Id)" class="space-y-2">
+                                <InputTextArea @bind-Value="editModelPost.Content" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none" rows="3" />
+                                <div class="flex gap-2">
+                                    <button type="submit" class="px-3 py-1 bg-green-600 text-white rounded">Save</button>
+                                    <button type="button" class="px-3 py-1 bg-gray-200 rounded" @onclick="CancelEdit">Cancel</button>
+                                </div>
+                            </EditForm>
+                        }
+                        else
+                        {
+                            <p class="text-gray-800 mb-3 whitespace-pre-wrap">@post.Content</p>
+                        }
+
+                        @if (post.MediaFiles.Any())
+                        {
+                            <div class="space-y-2 mb-3">
+                                @foreach (var media in post.MediaFiles)
+                                {
+                                    @if (media.Type == MediaType.Image)
+                                    {
+                                        <img src="@media.Url" class="w-full rounded-lg" />
+                                    }
+                                    else if (media.Type == MediaType.Audio)
+                                    {
+                                        <audio controls src="@media.Url" class="w-full"></audio>
+                                    }
+                                    else if (media.Type == MediaType.Video)
+                                    {
+                                        <video controls src="@media.Url" class="w-full rounded-lg"></video>
+                                    }
+                                    else if (media.Type == MediaType.File)
+                                    {
+                                        <a href="@media.Url" download class="inline-block text-blue-600 hover:underline">
+                                            @media.FileName
+                                        </a>
+                                    }
+                                }
+                            </div>
+                        }
+
+                        <a href="/post/@post.Id" class="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition text-sm font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            <span>@post.Comments.Count Comments</span>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+

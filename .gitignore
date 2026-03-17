@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+.env
+.env.development
+.env.production
