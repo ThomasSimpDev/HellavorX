@@ -1,0 +1,23 @@
+# Ignore build outputs
+bin/
+obj/
+
+# VS Code
+.vscode/
+
+# User-specific
+*.user
+*.suo
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
+
+# OS generated
+.DS_Store
+
+# Docker
+docker-compose*.yml

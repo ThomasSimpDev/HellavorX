@@ -1,3 +1,4 @@
+using System;
 using HellavorX.Components;
 using HellavorX.Data;
 using HellavorX.Models;
@@ -5,17 +6,18 @@ using HellavorX.Services;
 using HellavorX.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using DotNetEnv;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Load environment-specific .env file
-var environment = builder.Environment.EnvironmentName;
-var envFile = $".env.{environment.ToLower()}";
+// Load environment-specific .env file before building configuration
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+var envFile = $"../.env.{environment.ToLower()}";
 if (File.Exists(envFile))
 {
     Env.Load(envFile);
 }
+
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -58,6 +60,22 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddCascadingAuthenticationState();
 
 var app = builder.Build();
+
+// Apply any pending EF Core migrations on startup (useful for container deployments).
+// If the database is not reachable or the migration fails, the exception is logged but the app still starts.
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 if (!app.Environment.IsDevelopment())
 {
