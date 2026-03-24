@@ -1,7 +1,6 @@
 @page "/signup"
-@rendermode InteractiveServer
-@using Microsoft.AspNetCore.Identity
-@using HellavorX.Models
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.WebUtilities
 
 <PageTitle>Sign Up - HellavorX</PageTitle>
 
@@ -13,73 +12,48 @@
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">@errorMessage</div>
     }
 
-    <EditForm Model="model" OnValidSubmit="HandleSignup" FormName="SignupForm" class="space-y-4">
-        <DataAnnotationsValidator />
-        
+    <form method="post" action="/api/auth/signup" class="space-y-4">
         <div>
             <label class="block mb-2 font-medium">Name</label>
-            <InputText @bind-Value="model.Name" class="w-full px-4 py-2 border rounded" />
+            <input name="name" class="w-full px-4 py-2 border rounded" required />
         </div>
 
         <div>
             <label class="block mb-2 font-medium">Username</label>
-            <InputText @bind-Value="model.UserName" class="w-full px-4 py-2 border rounded" />
+            <input name="username" class="w-full px-4 py-2 border rounded" required />
         </div>
 
         <div>
             <label class="block mb-2 font-medium">Email</label>
-            <InputText @bind-Value="model.Email" class="w-full px-4 py-2 border rounded" type="email" />
+            <input name="email" type="email" class="w-full px-4 py-2 border rounded" required />
         </div>
 
         <div>
             <label class="block mb-2 font-medium">Password</label>
-            <InputText @bind-Value="model.Password" class="w-full px-4 py-2 border rounded" type="password" />
+            <input name="password" type="password" class="w-full px-4 py-2 border rounded" required minlength="6" />
         </div>
 
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700" disabled="@isProcessing">
-            @(isProcessing ? "Creating..." : "Sign Up")
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+            Sign Up
         </button>
-    </EditForm>
+    </form>
 
     <p class="mt-4">Already have an account? <a href="/login" class="text-blue-600 hover:underline">Login</a></p>
 </div>
 
 @code {
-    [Inject] private UserManager<ApplicationUser> UserManager { get; set; } = default!;
-    [Inject] private SignInManager<ApplicationUser> SignInManager { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
-    private SignupModel model = new();
     private string? errorMessage;
-    private bool isProcessing;
 
-    private async Task HandleSignup()
+    protected override void OnInitialized()
     {
-        isProcessing = true;
-        errorMessage = null;
-
-        var user = new ApplicationUser { UserName = model.UserName, Email = model.Email, Name = model.Name };
-        var result = await UserManager.CreateAsync(user, model.Password);
-
-        if (result.Succeeded)
+        // Check for error query parameter
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("error", out var error))
         {
-            await SignInManager.SignInAsync(user, isPersistent: false);
-            Navigation.NavigateTo("/profile", forceLoad: true);
+            errorMessage = error.ToString();
         }
-        else
-        {
-            errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
-        }
-
-        isProcessing = false;
-    }
-
-    private class SignupModel
-    {
-        public string Name { get; set; } = "";
-        public string UserName { get; set; } = "";
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
     }
 }
 
