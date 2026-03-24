@@ -64,7 +64,7 @@
         if (result.Succeeded)
         {
             await SignInManager.SignInAsync(user, isPersistent: false);
-            Navigation.NavigateTo("/profile");
+            Navigation.NavigateTo("/profile", forceLoad: true);
         }
         else
         {
