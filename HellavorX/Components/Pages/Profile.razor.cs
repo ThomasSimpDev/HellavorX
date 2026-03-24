@@ -43,11 +43,25 @@ public partial class Profile
         }
 
         currentUserId = UserManager.GetUserId(authUser);
+        
+        // If no username provided in URL, get current user's username
+        if (string.IsNullOrEmpty(Username))
+        {
+            var currentUser = await UserManager.GetUserAsync(authUser);
+            if (currentUser != null)
+            {
+                Username = currentUser.UserName ?? "";
+            }
+        }
+        
         await LoadProfile();
     }
 
     private async Task LoadProfile()
     {
+        if (string.IsNullOrEmpty(Username))
+            return;
+            
         user = await UserService.GetUserByUsernameAsync(Username);
         
         if (user == null)
