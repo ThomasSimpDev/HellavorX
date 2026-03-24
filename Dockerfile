@@ -1,5 +1,5 @@
-# 1) Build stage
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# 1) Build stage - Changed to 9.0
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies
@@ -11,8 +11,8 @@ COPY . .
 WORKDIR /src/HellavorX
 RUN dotnet publish "HellavorX.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# 2) Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+# 2) Runtime stage - Changed to 9.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
 # Copy published output
@@ -26,7 +26,7 @@ RUN chmod +x /app/entrypoint.sh
 EXPOSE 80
 EXPOSE 443
 
-# Set a sane default (can be overridden by env vars in deployment)
+# Set a sane default
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 ENTRYPOINT ["/app/entrypoint.sh"]
