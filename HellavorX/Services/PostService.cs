@@ -8,10 +8,10 @@ namespace HellavorX.Services;
 public class PostService : IPostService
 {
     private readonly IPostRepository _postRepository;
-    private readonly FileUploadService _fileUploadService;
+    private readonly SupabaseStorageService _fileUploadService;
     private readonly ApplicationDbContext _context;
 
-    public PostService(IPostRepository postRepository, FileUploadService fileUploadService, ApplicationDbContext context)
+    public PostService(IPostRepository postRepository, SupabaseStorageService fileUploadService, ApplicationDbContext context)
     {
         _postRepository = postRepository;
         _fileUploadService = fileUploadService;

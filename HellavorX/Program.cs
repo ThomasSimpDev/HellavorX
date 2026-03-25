@@ -53,7 +53,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/login";
 });
 
-builder.Services.AddScoped<FileUploadService>();
+builder.Services.AddScoped<SupabaseStorageService>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

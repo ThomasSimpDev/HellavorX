@@ -7,9 +7,9 @@ namespace HellavorX.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
-    private readonly FileUploadService _fileUploadService;
+    private readonly SupabaseStorageService _fileUploadService;
 
-    public UserService(IUserRepository userRepository, FileUploadService fileUploadService)
+    public UserService(IUserRepository userRepository, SupabaseStorageService fileUploadService)
     {
         _userRepository = userRepository;
         _fileUploadService = fileUploadService;

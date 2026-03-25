@@ -8,10 +8,10 @@ namespace HellavorX.Services;
 public class CommentService : ICommentService
 {
     private readonly ICommentRepository _commentRepository;
-    private readonly FileUploadService _fileUploadService;
+    private readonly SupabaseStorageService _fileUploadService;
     private readonly ApplicationDbContext _context;
 
-    public CommentService(ICommentRepository commentRepository, FileUploadService fileUploadService, ApplicationDbContext context)
+    public CommentService(ICommentRepository commentRepository, SupabaseStorageService fileUploadService, ApplicationDbContext context)
     {
         _commentRepository = commentRepository;
         _fileUploadService = fileUploadService;
