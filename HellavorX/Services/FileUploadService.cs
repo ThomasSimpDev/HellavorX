@@ -1,28 +1,49 @@
 using HellavorX.Models;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 
 namespace HellavorX.Services;
 
 public class FileUploadService
 {
-    private readonly IWebHostEnvironment _env;
+    private readonly Cloudinary _cloudinary;
 
-    public FileUploadService(IWebHostEnvironment env)
+    public FileUploadService(IConfiguration configuration)
     {
-        _env = env;
+        var cloudName = configuration["CLOUDINARY_CLOUD_NAME"];
+        var apiKey = configuration["CLOUDINARY_API_KEY"];
+        var apiSecret = configuration["CLOUDINARY_API_SECRET"];
+
+        var account = new Account(cloudName, apiKey, apiSecret);
+        _cloudinary = new Cloudinary(account);
     }
 
     public async Task<string> UploadFileAsync(Stream fileStream, string fileName)
     {
-        var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
-        Directory.CreateDirectory(uploadsFolder);
-        
-        var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
-        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-        
-        using var fileStreamOutput = new FileStream(filePath, FileMode.Create);
-        await fileStream.CopyToAsync(fileStreamOutput);
-        
-        return $"/uploads/{uniqueFileName}";
+        // Reset stream position if needed
+        if (fileStream.CanSeek)
+        {
+            fileStream.Position = 0;
+        }
+
+        var uploadParams = new ImageUploadParams
+        {
+            File = new FileDescription(fileName, fileStream),
+            UniqueFilename = true,
+            Overwrite = false,
+            UseFilename = false,
+            Folder = "hellavorx"
+        };
+
+        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+        if (uploadResult.Error != null)
+        {
+            throw new Exception($"Cloudinary upload failed: {uploadResult.Error.Message}");
+        }
+
+        // Return the secure URL from Cloudinary
+        return uploadResult.SecureUrl.ToString();
     }
 
     public MediaType GetMediaType(string fileName)
