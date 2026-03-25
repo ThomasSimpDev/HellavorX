@@ -10,8 +10,12 @@ public class SupabaseStorageService
 
     public SupabaseStorageService(IConfiguration configuration)
     {
-        var supabaseUrl = configuration["SUPABASE_URL"] ?? throw new ArgumentNullException("SUPABASE_URL configuration is missing");
-        var supabaseKey = configuration["SUPABASE_ANON_KEY"] ?? throw new ArgumentNullException("SUPABASE_ANON_KEY configuration is missing");
+        var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL") 
+            ?? configuration["SUPABASE_URL"] 
+            ?? throw new ArgumentNullException("SUPABASE_URL configuration is missing");
+        var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY") 
+            ?? configuration["SUPABASE_ANON_KEY"] 
+            ?? throw new ArgumentNullException("SUPABASE_ANON_KEY configuration is missing");
 
         var options = new SupabaseOptions
         {
