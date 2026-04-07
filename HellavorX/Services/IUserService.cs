@@ -1,10 +1,10 @@
 using HellavorX.Models;
-using Microsoft.AspNetCore.Components.Forms;
+using HellavorX.ViewModels;
 
 namespace HellavorX.Services;
 
 public interface IUserService
 {
     Task<ApplicationUser?> GetUserByUsernameAsync(string username);
-    Task UpdateUserProfileAsync(string userId, string name, string bio, IBrowserFile? profilePicture);
+    Task UpdateUserProfileAsync(string userId, string name, string bio, SelectedFile? profilePicture);
 }

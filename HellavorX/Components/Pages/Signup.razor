@@ -13,6 +13,7 @@
     }
 
     <form method="post" action="/api/auth/signup" class="space-y-4">
+        <input name="__RequestVerificationToken" type="hidden" value="@GetAntiforgeryToken()" />
         <div>
             <label class="block mb-2 font-medium">Name</label>
             <input name="name" class="w-full px-4 py-2 border rounded" required />
@@ -43,6 +44,7 @@
 
 @code {
     [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] protected IHttpContextAccessor? HttpContextAccessor { get; set; }
 
     private string? errorMessage;
 
@@ -54,6 +56,11 @@
         {
             errorMessage = error.ToString();
         }
+    }
+
+    private string? GetAntiforgeryToken()
+    {
+        return HttpContextAccessor?.HttpContext?.Request.Cookies["XSRF-TOKEN"];
     }
 }
 

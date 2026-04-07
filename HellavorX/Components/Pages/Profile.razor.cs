@@ -26,7 +26,7 @@ public partial class Profile
     private bool showEditForm;
     private bool isUpdating;
     private EditProfileViewModel editModel = new();
-    private IBrowserFile? selectedProfilePic;
+    private SelectedFile? selectedProfilePic;
     private string? currentUserId;
     private int? editPostId;
     private EditPostViewModel editModelPost = new();
@@ -82,9 +82,20 @@ public partial class Profile
         showEditForm = !showEditForm;
     }
 
-    private void HandleProfilePicture(InputFileChangeEventArgs e)
+    private async Task HandleProfilePicture(InputFileChangeEventArgs e)
     {
-        selectedProfilePic = e.File;
+        var file = e.File;
+        using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        var bytes = memoryStream.ToArray();
+        
+        selectedProfilePic = new SelectedFile
+        {
+            Name = file.Name,
+            Content = bytes,
+            ContentType = file.ContentType
+        };
     }
 
     private async Task UpdateProfile()

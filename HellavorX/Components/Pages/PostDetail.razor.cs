@@ -22,7 +22,7 @@ public partial class PostDetail
 
     private Post? post;
     private CreateCommentViewModel newComment = new();
-    private List<IBrowserFile> selectedCommentFiles = new();
+    private List<SelectedFile> selectedCommentFiles = new();
     private bool isCommenting;
     private string? currentUserId;
     private Comment? replyingTo;
@@ -87,10 +87,23 @@ public partial class PostDetail
         }
     }
 
-    private void HandleCommentFileSelection(InputFileChangeEventArgs e)
+    private async Task HandleCommentFileSelection(InputFileChangeEventArgs e)
     {
         var incoming = e.GetMultipleFiles(10 - selectedCommentFiles.Count);
-        selectedCommentFiles.AddRange(incoming);
+        foreach (var file in incoming)
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            var bytes = memoryStream.ToArray();
+            
+            selectedCommentFiles.Add(new SelectedFile
+            {
+                Name = file.Name,
+                Content = bytes,
+                ContentType = file.ContentType
+            });
+        }
     }
 
     public void HandleReplyClick(Comment comment)
@@ -106,7 +119,7 @@ public partial class PostDetail
 
     private async Task AddComment(int? parentId)
     {
-        if (string.IsNullOrWhiteSpace(newComment.Content))
+        if (string.IsNullOrWhiteSpace(newComment.Content) && !selectedCommentFiles.Any())
             return;
 
         isCommenting = true;

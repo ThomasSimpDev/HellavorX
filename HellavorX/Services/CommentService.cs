@@ -1,7 +1,7 @@
 using HellavorX.Data;
 using HellavorX.Models;
 using HellavorX.Repositories;
-using Microsoft.AspNetCore.Components.Forms;
+using HellavorX.ViewModels;
 
 namespace HellavorX.Services;
 
@@ -31,7 +31,7 @@ public class CommentService : ICommentService
         return comments;
     }
 
-    public async Task<Comment> CreateCommentAsync(string content, string userId, int postId, int? parentId, List<IBrowserFile> files)
+    public async Task<Comment> CreateCommentAsync(string content, string userId, int postId, int? parentId, List<SelectedFile> files)
     {
         var comment = new Comment
         {
@@ -46,7 +46,7 @@ public class CommentService : ICommentService
 
         foreach (var file in files)
         {
-            using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+            using var stream = new MemoryStream(file.Content);
             var url = await _fileUploadService.UploadFileAsync(stream, file.Name);
             var mediaType = _fileUploadService.GetMediaType(file.Name);
 

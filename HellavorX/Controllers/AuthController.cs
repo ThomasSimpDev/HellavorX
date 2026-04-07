@@ -20,12 +20,26 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromForm] string username, [FromForm] string password)
     {
-        var result = await _signInManager.PasswordSignInAsync(username, password, false, false);
+        // Find user by username or email
+        var user = await _userManager.FindByNameAsync(username);
+        if (user == null)
+        {
+            user = await _userManager.FindByEmailAsync(username);
+        }
+        
+        if (user == null)
+        {
+            return Redirect("/login?error=User+not+found");
+        }
+        
+        var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
         
         if (result.Succeeded)
+        {
             return Redirect("/");
+        }
         
-        return Redirect("/auth/login");
+        return Redirect("/login?error=Invalid+credentials");
     }
 
     [HttpPost("signup")]

@@ -8,3 +8,4 @@ wwwroot/uploads/*
 .env
 .env.development
 .env.production
+.idea/

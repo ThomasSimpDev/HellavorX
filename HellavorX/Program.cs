@@ -4,7 +4,9 @@ using HellavorX.Data;
 using HellavorX.Models;
 using HellavorX.Services;
 using HellavorX.Repositories;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
@@ -20,8 +22,20 @@ if (File.Exists(envFile))
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Configure antiforgery to work properly with Blazor Server
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "XSRF-TOKEN";
+    options.Cookie.HttpOnly = false; // Must be false so JS can read the token
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
+
 
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
@@ -49,8 +63,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/login";
-    options.LogoutPath = "/logout";
+    options.LogoutPath = "/login";
     options.AccessDeniedPath = "/login";
+    options.Cookie.Name = ".HellavorX.Identity";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.ExpireTimeSpan = TimeSpan.FromDays(14);
+    options.SlidingExpiration = true;
 });
 
 builder.Services.AddScoped<SupabaseStorageService>();

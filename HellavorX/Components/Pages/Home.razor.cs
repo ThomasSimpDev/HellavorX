@@ -1,6 +1,7 @@
 using HellavorX.Models;
 using HellavorX.Services;
 using HellavorX.ViewModels;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
@@ -16,10 +17,12 @@ public partial class Home
     [Inject] private UserManager<ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] protected IHttpContextAccessor? HttpContextAccessor { get; set; }
+    [Inject] protected IAntiforgery? Antiforgery { get; set; }
 
     private List<Post> posts = new();
     private CreatePostViewModel newPost = new();
-    private List<IBrowserFile> selectedFiles = new();
+    private List<SelectedFile> selectedFiles = new();
     private bool isPosting;
     private string? currentUserId;
     private int? editPostId;
@@ -29,7 +32,7 @@ public partial class Home
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        
+
         if (!user.Identity?.IsAuthenticated ?? true)
         {
             Navigation.NavigateTo("/login");
@@ -45,13 +48,28 @@ public partial class Home
         posts = await PostService.GetAllPostsAsync();
     }
 
-    private void HandleFileSelection(InputFileChangeEventArgs e)
+    private async Task HandleFileSelection(InputFileChangeEventArgs e)
     {
         var incoming = e.GetMultipleFiles(10 - selectedFiles.Count);
-        selectedFiles.AddRange(incoming);
+        foreach (var file in incoming)
+        {
+            // Read file immediately since IBrowserFile stream may not be available later
+            using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            var bytes = memoryStream.ToArray();
+
+            selectedFiles.Add(new SelectedFile
+            {
+                Name = file.Name,
+                Content = bytes,
+                ContentType = file.ContentType
+            });
+        }
+        StateHasChanged();
     }
 
-    private void RemoveFile(IBrowserFile file)
+    private void RemoveFile(SelectedFile file)
     {
         selectedFiles.Remove(file);
     }
@@ -63,7 +81,7 @@ public partial class Home
 
         isPosting = true;
         await PostService.CreatePostAsync(newPost.Content, currentUserId!, selectedFiles);
-        
+
         newPost = new();
         selectedFiles.Clear();
         await LoadPosts();

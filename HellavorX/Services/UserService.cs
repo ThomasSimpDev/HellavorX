@@ -1,6 +1,6 @@
 using HellavorX.Models;
 using HellavorX.Repositories;
-using Microsoft.AspNetCore.Components.Forms;
+using HellavorX.ViewModels;
 
 namespace HellavorX.Services;
 
@@ -20,7 +20,7 @@ public class UserService : IUserService
         return await _userRepository.GetUserByUsernameAsync(username);
     }
 
-    public async Task UpdateUserProfileAsync(string userId, string name, string bio, IBrowserFile? profilePicture)
+    public async Task UpdateUserProfileAsync(string userId, string name, string bio, SelectedFile? profilePicture)
     {
         var user = await _userRepository.GetUserByIdAsync(userId);
         if (user == null) return;
@@ -30,7 +30,7 @@ public class UserService : IUserService
 
         if (profilePicture != null)
         {
-            using var stream = profilePicture.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+            using var stream = new MemoryStream(profilePicture.Content);
             user.ProfilePictureUrl = await _fileUploadService.UploadFileAsync(stream, profilePicture.Name);
         }
 
