@@ -25,7 +25,9 @@ public class UserRepository : IUserRepository
 
     public async Task UpdateUserAsync(ApplicationUser user)
     {
-        _context.Users.Update(user);
+        // Note: Don't call Update() here - the entity is already tracked by the context
+        // (e.g., when fetched with FindAsync). Calling Update() on an already-tracked
+        // entity can cause issues with change tracking in EF Core.
         await _context.SaveChangesAsync();
     }
 }

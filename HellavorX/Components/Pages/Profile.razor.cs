@@ -104,12 +104,15 @@ public partial class Profile
             return;
 
         isUpdating = true;
+        StateHasChanged(); // Force UI to update to show loading state
+        
         await UserService.UpdateUserProfileAsync(currentUserId!, editModel.Name, editModel.Bio, selectedProfilePic);
         
         showEditForm = false;
         isUpdating = false;
         selectedProfilePic = null;
         await LoadProfile();
+        StateHasChanged(); // Force UI to update with new profile data
     }
 
     private void StartEdit(Post post)
