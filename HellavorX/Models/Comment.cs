@@ -13,4 +13,8 @@ public class Comment
     public Comment? ParentComment { get; set; }
     public ICollection<Comment> Replies { get; set; } = new List<Comment>();
     public ICollection<Media> MediaFiles { get; set; } = new List<Media>();
+    public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
+    
+    public int ReactionCount => Reactions.Count;
+    public Dictionary<ReactionType, int> ReactionCounts => Reactions.GroupBy(r => r.Type).ToDictionary(g => g.Key, g => g.Count());
 }

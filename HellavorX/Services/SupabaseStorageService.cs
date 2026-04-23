@@ -71,7 +71,7 @@ public class SupabaseStorageService
         await fileStream.CopyToAsync(memoryStream);
         var fileBytes = memoryStream.ToArray();
 
-        var bucket = _supabase.Storage.From(_bucketName);
+        var bucket = _supabase!.Storage.From(_bucketName);
 
         // Ensure bucket exists, create if not
         var bucketExists = await BucketExistsAsync(_bucketName);
@@ -96,7 +96,7 @@ public class SupabaseStorageService
         if (uploadResult != null)
         {
             // Get the public URL
-            var publicUrl = _supabase.Storage.From(_bucketName).GetPublicUrl(uniqueFileName);
+            var publicUrl = _supabase!.Storage.From(_bucketName).GetPublicUrl(uniqueFileName);
             return publicUrl;
         }
 
@@ -121,10 +121,10 @@ public class SupabaseStorageService
         try
         {
             // Extract filename from URL
-            var uri = new Uri(fileUrl);
+            var uri = new Uri(fileUrl!);
             var fileName = Path.GetFileName(uri.LocalPath);
 
-            var bucket = _supabase.Storage.From(_bucketName);
+            var bucket = _supabase!.Storage.From(_bucketName);
             await bucket.Remove(new List<string> { fileName });
             return true;
         }

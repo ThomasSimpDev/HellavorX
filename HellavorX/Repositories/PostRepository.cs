@@ -19,6 +19,8 @@ public class PostRepository : IPostRepository
             .Include(p => p.User)
             .Include(p => p.MediaFiles)
             .Include(p => p.Comments)
+            .Include(p => p.Reactions)
+            .ThenInclude(r => r.User)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -28,6 +30,8 @@ public class PostRepository : IPostRepository
         return await _context.Posts
             .Include(p => p.User)
             .Include(p => p.MediaFiles)
+            .Include(p => p.Reactions)
+            .ThenInclude(r => r.User)
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id);
     }
@@ -37,6 +41,8 @@ public class PostRepository : IPostRepository
         return await _context.Posts
             .Include(p => p.MediaFiles)
             .Include(p => p.Comments)
+            .Include(p => p.Reactions)
+            .ThenInclude(r => r.User)
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();

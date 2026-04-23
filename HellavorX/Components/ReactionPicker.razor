@@ -1,0 +1,81 @@
+@using HellavorX.Models
+@using System.Collections.Generic
+
+<div class="relative inline-flex">
+    <button class="flex items-center gap-1 p-2 rounded-lg hover:bg-gray-200 transition text-gray-600 group" @onclick="TogglePopup" @onmouseenter="OpenPopup" @onmouseleave="ClosePopup">
+        <svg class="w-5 h-5 stroke-current @(IsLiked ? "fill-red-500 stroke-red-500" : "hover:stroke-red-600")" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+        <span class="font-medium">@TotalCount</span>
+    </button>
+    
+    @if (showPopup)
+    {
+        <div class="absolute top-full left-0 mt-1 w-56 bg-white border shadow-2xl rounded-xl p-2 z-50 backdrop-blur-sm border-gray-200 flex flex-wrap gap-1 pointer-events-auto transition-all duration-200 opacity-100 translate-y-0">
+            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Like)" title="Like">
+                👍
+                <span class="text-xs text-gray-600">@LikeCount</span>
+            </button>
+            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Love)" title="Love">
+                ❤️
+                <span class="text-xs text-gray-600">@LoveCount</span>
+            </button>
+            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Haha)" title="Haha">
+                😂
+                <span class="text-xs text-gray-600">@HahaCount</span>
+            </button>
+            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Wow)" title="Wow">
+                😮
+                <span class="text-xs text-gray-600">@WowCount</span>
+            </button>
+            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Sad)" title="Sad">
+                😢
+                <span class="text-xs text-gray-600">@SadCount</span>
+            </button>
+            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Angry)" title="Angry">
+                😠
+                <span class="text-xs text-gray-600">@AngryCount</span>
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int? PostId { get; set; }
+    [Parameter] public int? CommentId { get; set; }
+    [Parameter] public Dictionary<ReactionType, int>? ReactionCounts { get; set; }
+    [Parameter] public EventCallback<ReactionType> OnReaction { get; set; }
+    [Parameter] public bool IsLiked { get; set; }
+
+    private bool showPopup = false;
+
+    private void TogglePopup()
+    {
+        showPopup = !showPopup;
+    }
+
+    private void OpenPopup()
+    {
+        showPopup = true;
+    }
+
+    private void ClosePopup()
+    {
+        showPopup = false;
+    }
+
+    private async Task SelectReaction(ReactionType type)
+    {
+        showPopup = false;
+        await OnReaction.InvokeAsync(type);
+    }
+
+    private int TotalCount => ReactionCounts?.Values.Sum() ?? 0;
+    private int LikeCount => ReactionCounts?.GetValueOrDefault(ReactionType.Like, 0) ?? 0;
+    private int LoveCount => ReactionCounts?.GetValueOrDefault(ReactionType.Love, 0) ?? 0;
+    private int HahaCount => ReactionCounts?.GetValueOrDefault(ReactionType.Haha, 0) ?? 0;
+    private int WowCount => ReactionCounts?.GetValueOrDefault(ReactionType.Wow, 0) ?? 0;
+    private int SadCount => ReactionCounts?.GetValueOrDefault(ReactionType.Sad, 0) ?? 0;
+    private int AngryCount => ReactionCounts?.GetValueOrDefault(ReactionType.Angry, 0) ?? 0;
+}
+

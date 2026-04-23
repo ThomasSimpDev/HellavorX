@@ -18,7 +18,10 @@ public partial class PostDetail
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     [Inject] private UserManager<ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
-    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+[Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private IReactionService ReactionService { get; set; } = default!;
+
+
 
     private Post? post;
     private CreateCommentViewModel newComment = new();
@@ -52,6 +55,7 @@ public partial class PostDetail
         {
             var comments = await CommentService.GetCommentsByPostIdAsync(Id);
             post.Comments = comments;
+
         }
 
         StateHasChanged();
@@ -115,6 +119,13 @@ public partial class PostDetail
     private void CancelReply()
     {
         replyingTo = null;
+    }
+
+    private async Task TogglePostReaction(ReactionType type)
+    {
+        if (post == null) return;
+        await ReactionService.ToggleReactionAsync(Id, null, currentUserId!, type);
+        await LoadPost();
     }
 
     private async Task AddComment(int? parentId)

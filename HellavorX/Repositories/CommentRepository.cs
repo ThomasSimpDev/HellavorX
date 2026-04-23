@@ -15,18 +15,30 @@ public class CommentRepository : ICommentRepository
 
     public async Task<List<Comment>> GetCommentsByPostIdAsync(int postId)
     {
-        return await _context.Comments
+        var comments = await _context.Comments
             .Include(c => c.User)
             .Include(c => c.MediaFiles)
+            .Include(c => c.Reactions).ThenInclude(r => r.User)
             .Where(c => c.PostId == postId)
             .OrderBy(c => c.CreatedAt)
             .AsNoTracking()
             .ToListAsync();
+        
+        // Build hierarchy
+        foreach (var comment in comments)
+        {
+            comment.Replies = comments.Where(c => c.ParentCommentId == comment.Id).ToList();
+        }
+        
+        return comments;
     }
 
     public async Task<Comment?> GetCommentByIdAsync(int id)
     {
-        return await _context.Comments.FindAsync(id);
+        return await _context.Comments
+            .Include(c => c.Reactions)
+            .ThenInclude(r => r.User)
+            .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<Comment> CreateCommentAsync(Comment comment)

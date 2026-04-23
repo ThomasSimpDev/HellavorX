@@ -9,4 +9,8 @@ public class Post
     public ApplicationUser User { get; set; } = null!;
     public ICollection<Media> MediaFiles { get; set; } = new List<Media>();
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
+    
+    public int ReactionCount => Reactions.Count;
+    public Dictionary<ReactionType, int> ReactionCounts => Reactions.GroupBy(r => r.Type).ToDictionary(g => g.Key, g => g.Count());
 }

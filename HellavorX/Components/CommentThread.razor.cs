@@ -20,6 +20,9 @@ public partial class CommentThread
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     [Inject] private UserManager<ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private IReactionService ReactionService { get; set; } = default!;
+
+
 
     private bool isEditing;
     private EditPostViewModel editModel = new();
@@ -30,6 +33,7 @@ public partial class CommentThread
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         currentUserId = UserManager.GetUserId(user);
+
     }
 
     private void BeginEdit()
@@ -50,6 +54,12 @@ public partial class CommentThread
         await CommentService.UpdateCommentAsync(Comment.Id, editModel.Content, currentUserId!);
         await OnReplySubmit();
         CancelEdit();
+    }
+
+    private async Task ToggleCommentReaction(ReactionType type)
+    {
+        await ReactionService.ToggleReactionAsync(null, Comment.Id, currentUserId!, type);
+        await OnReplySubmit!();
     }
 
     private async Task ConfirmDelete()

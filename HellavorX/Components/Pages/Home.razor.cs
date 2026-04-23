@@ -17,6 +17,7 @@ public partial class Home
     [Inject] private UserManager<ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private IReactionService ReactionService { get; set; } = default!;
     [Inject] protected IHttpContextAccessor? HttpContextAccessor { get; set; }
     [Inject] protected IAntiforgery? Antiforgery { get; set; }
 
@@ -46,6 +47,12 @@ public partial class Home
     private async Task LoadPosts()
     {
         posts = await PostService.GetAllPostsAsync();
+    }
+
+    private async Task TogglePostReaction(int postId, ReactionType type)
+    {
+        await ReactionService.ToggleReactionAsync(postId, null, currentUserId!, type);
+        await LoadPosts();
     }
 
     private async Task HandleFileSelection(InputFileChangeEventArgs e)

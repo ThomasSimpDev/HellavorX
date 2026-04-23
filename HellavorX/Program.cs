@@ -79,6 +79,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IReactionRepository, ReactionRepository>();
+builder.Services.AddScoped<IReactionService, ReactionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddCascadingAuthenticationState();
 
