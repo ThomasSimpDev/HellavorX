@@ -76,7 +76,7 @@
 
             <div class="border-t border-gray-100 px-6 py-4 bg-gray-50">
                 <div class="flex items-center gap-4">
-<ReactionPicker PostId="@Id" ReactionCounts="@post.ReactionCounts" OnReaction="@((type) => TogglePostReaction(type))" />
+                    <ReactionPicker PostId="@Id" ReactionCounts="@post.ReactionCounts" OnReaction="@((type) => TogglePostReaction(type))" UserReaction="@postUserReaction" />
                     <div class="flex-1"></div>
                     <a href="#" class="flex items-center gap-1.5 p-3 rounded-lg hover:bg-gray-200 transition text-gray-600">
                         <svg class="w-6 h-6 stroke-current" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -27,13 +27,17 @@ public partial class CommentThread
     private bool isEditing;
     private EditPostViewModel editModel = new();
     private string? currentUserId;
+    private ReactionType? commentUserReaction;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         currentUserId = UserManager.GetUserId(user);
-
+        if (currentUserId != null)
+        {
+            commentUserReaction = await ReactionService.GetUserReactionAsync(null, Comment.Id, currentUserId);
+        }
     }
 
     private void BeginEdit()
@@ -59,6 +63,10 @@ public partial class CommentThread
     private async Task ToggleCommentReaction(ReactionType type)
     {
         await ReactionService.ToggleReactionAsync(null, Comment.Id, currentUserId!, type);
+        if (currentUserId != null)
+        {
+            commentUserReaction = await ReactionService.GetUserReactionAsync(null, Comment.Id, currentUserId);
+        }
         await OnReplySubmit!();
     }
 

@@ -31,6 +31,7 @@ public partial class PostDetail
     private Comment? replyingTo;
     private bool isEditing;
     private EditPostViewModel editModel = new();
+    private ReactionType? postUserReaction;
 
     protected override async Task OnInitializedAsync()
     {
@@ -55,7 +56,11 @@ public partial class PostDetail
         {
             var comments = await CommentService.GetCommentsByPostIdAsync(Id);
             post.Comments = comments;
+        }
 
+        if (currentUserId != null)
+        {
+            postUserReaction = await ReactionService.GetUserReactionAsync(Id, null, currentUserId);
         }
 
         StateHasChanged();
@@ -125,6 +130,10 @@ public partial class PostDetail
     {
         if (post == null) return;
         await ReactionService.ToggleReactionAsync(Id, null, currentUserId!, type);
+        if (currentUserId != null)
+        {
+            postUserReaction = await ReactionService.GetUserReactionAsync(Id, null, currentUserId);
+        }
         await LoadPost();
     }
 

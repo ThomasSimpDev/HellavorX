@@ -60,7 +60,7 @@
             }
             
             <div class="flex items-center gap-3 mt-2">
-                <ReactionPicker CommentId="@Comment.Id" ReactionCounts="@Comment.ReactionCounts" OnReaction="@((type) => ToggleCommentReaction(type))" />
+                <ReactionPicker CommentId="@Comment.Id" ReactionCounts="@Comment.ReactionCounts" OnReaction="@((type) => ToggleCommentReaction(type))" UserReaction="@commentUserReaction" />
                 <button class="text-sm text-gray-600 hover:text-blue-600 font-medium transition" @onclick="() => OnReplyClick?.Invoke(Comment)">Reply</button>
             </div>
 
