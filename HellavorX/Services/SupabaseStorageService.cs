@@ -107,6 +107,9 @@ public class SupabaseStorageService
     {
         try
         {
+            if (_supabase == null)
+                return false;
+
             var buckets = await _supabase.Storage.ListBuckets();
             return buckets?.Any(b => b.Name == bucketName) ?? false;
         }
@@ -120,11 +123,14 @@ public class SupabaseStorageService
     {
         try
         {
+            if (!IsAvailable || _supabase == null)
+                return false;
+
             // Extract filename from URL
-            var uri = new Uri(fileUrl!);
+            var uri = new Uri(fileUrl);
             var fileName = Path.GetFileName(uri.LocalPath);
 
-            var bucket = _supabase!.Storage.From(_bucketName);
+            var bucket = _supabase.Storage.From(_bucketName);
             await bucket.Remove(new List<string> { fileName });
             return true;
         }

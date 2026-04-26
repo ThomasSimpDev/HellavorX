@@ -11,13 +11,15 @@ public class PostService : IPostService
     private readonly IPostRepository _postRepository;
     private readonly SupabaseStorageService _fileUploadService;
     private readonly ApplicationDbContext _context;
+    private readonly IFollowService _followService;
     private readonly ILogger<PostService>? _logger;
 
-    public PostService(IPostRepository postRepository, SupabaseStorageService fileUploadService, ApplicationDbContext context, ILogger<PostService>? logger = null)
+    public PostService(IPostRepository postRepository, SupabaseStorageService fileUploadService, ApplicationDbContext context, IFollowService followService, ILogger<PostService>? logger = null)
     {
         _postRepository = postRepository;
         _fileUploadService = fileUploadService;
         _context = context;
+        _followService = followService;
         _logger = logger;
     }
 
@@ -34,6 +36,19 @@ public class PostService : IPostService
     public async Task<List<Post>> GetPostsByUserIdAsync(string userId)
     {
         return await _postRepository.GetPostsByUserIdAsync(userId);
+    }
+
+    public async Task<List<Post>> GetFeedForUserAsync(string userId)
+    {
+        var followingIds = await _followService.GetFollowingIdsAsync(userId);
+        return await _postRepository.GetFeedForUserAsync(userId, followingIds);
+    }
+
+    public async Task<List<Post>> SearchPostsAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return new List<Post>();
+        return await _postRepository.SearchPostsAsync(query);
     }
 
     public async Task<Post> CreatePostAsync(string content, string userId, List<SelectedFile> files)

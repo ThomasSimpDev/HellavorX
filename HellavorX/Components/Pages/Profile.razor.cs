@@ -15,6 +15,7 @@ public partial class Profile
     
     [Inject] private IUserService UserService { get; set; } = default!;
     [Inject] private IPostService PostService { get; set; } = default!;
+    [Inject] private IFollowService FollowService { get; set; } = default!;
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     [Inject] private UserManager<ApplicationUser> UserManager { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
@@ -30,6 +31,9 @@ public partial class Profile
     private string? currentUserId;
     private int? editPostId;
     private EditPostViewModel editModelPost = new();
+    private bool isFollowing;
+    private int followerCount;
+    private int followingCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -70,6 +74,14 @@ public partial class Profile
         isOwnProfile = user.Id == currentUserId;
         userPosts = await PostService.GetPostsByUserIdAsync(user.Id);
 
+        if (!isOwnProfile && currentUserId != null)
+        {
+            isFollowing = await FollowService.IsFollowingAsync(currentUserId, user.Id);
+        }
+
+        followerCount = await FollowService.GetFollowerCountAsync(user.Id);
+        followingCount = await FollowService.GetFollowingCountAsync(user.Id);
+
         editModel = new EditProfileViewModel
         {
             Name = user.Name,
@@ -80,6 +92,25 @@ public partial class Profile
     private void ToggleEdit()
     {
         showEditForm = !showEditForm;
+    }
+
+    private async Task ToggleFollow()
+    {
+        if (user == null || currentUserId == null || isOwnProfile)
+            return;
+
+        if (isFollowing)
+        {
+            await FollowService.UnfollowUserAsync(currentUserId, user.Id);
+            isFollowing = false;
+            followerCount--;
+        }
+        else
+        {
+            await FollowService.FollowUserAsync(currentUserId, user.Id);
+            isFollowing = true;
+            followerCount++;
+        }
     }
 
     private async Task HandleProfilePicture(InputFileChangeEventArgs e)

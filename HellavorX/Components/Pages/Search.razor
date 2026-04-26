@@ -1,0 +1,106 @@
+@page "/search"
+@using HellavorX.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<PageTitle>Search - HellavorX</PageTitle>
+
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-xl font-semibold mb-4">Search</h3>
+        <div class="flex gap-2">
+            <input @bind="searchQuery" @bind:event="oninput" @onkeydown="HandleKeyDown" type="text"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Search users or posts..." autofocus />
+            <button class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition" @onclick="ExecuteSearch">
+                Search
+            </button>
+        </div>
+    </div>
+
+    @if (hasSearched)
+    {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="flex border-b border-gray-200">
+                <button class="flex-1 py-3 text-center font-medium transition @(activeTab == "users" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700")" @onclick='() => activeTab = "users"'>
+                    Users (@userResults.Count)
+                </button>
+                <button class="flex-1 py-3 text-center font-medium transition @(activeTab == "posts" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700")" @onclick='() => activeTab = "posts"'>
+                    Posts (@postResults.Count)
+                </button>
+            </div>
+
+            <div class="p-6">
+                @if (isSearching)
+                {
+                    <p class="text-center text-gray-500 py-8">Searching...</p>
+                }
+                else if (activeTab == "users")
+                {
+                    @if (!userResults.Any())
+                    {
+                        <p class="text-center text-gray-500 py-8">No users found.</p>
+                    }
+                    else
+                    {
+                        <div class="space-y-4">
+                            @foreach (var user in userResults)
+                            {
+                                <a href="/profile/@user.UserName" class="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition border border-gray-100">
+                                    <img src="@(user.ProfilePictureUrl ?? "/favicon.png")" class="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100" />
+                                    <div>
+                                        <p class="font-semibold text-gray-900">@user.Name</p>
+                                        <p class="text-sm text-gray-500">@@@user.UserName</p>
+                                        @if (!string.IsNullOrEmpty(user.Bio))
+                                        {
+                                            <p class="text-sm text-gray-600 mt-1 line-clamp-1">@user.Bio</p>
+                                        }
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    @if (!postResults.Any())
+                    {
+                        <p class="text-center text-gray-500 py-8">No posts found.</p>
+                    }
+                    else
+                    {
+                        <div class="space-y-4">
+                            @foreach (var post in postResults)
+                            {
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition">
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <img src="@(post.User.ProfilePictureUrl ?? "/favicon.png")" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100" />
+                                        <div>
+                                            <a href="/profile/@post.User.UserName" class="font-semibold text-gray-900 hover:text-blue-600">@post.User.Name</a>
+                                            <p class="text-xs text-gray-500">@@@post.User.UserName · @post.CreatedAt.ToString("MMM dd, yyyy")</p>
+                                        </div>
+                                    </div>
+                                    <a href="/post/@post.Id" class="block">
+                                        <p class="text-gray-800 whitespace-pre-wrap line-clamp-3 mb-3">@post.Content</p>
+                                    </a>
+                                    @if (post.MediaFiles.Any())
+                                    {
+                                        <div class="mb-3">
+                                            <span class="text-xs text-gray-500">@post.MediaFiles.Count media file(s)</span>
+                                        </div>
+                                    }
+                                    <div class="flex items-center gap-4 text-sm text-gray-600">
+                                        <span>@post.ReactionCount reactions</span>
+                                        <span>@post.Comments.Count comments</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+

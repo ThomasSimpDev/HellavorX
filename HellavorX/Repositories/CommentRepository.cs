@@ -6,83 +6,85 @@ namespace HellavorX.Repositories;
 
 public class CommentRepository : ICommentRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-    public CommentRepository(ApplicationDbContext context)
+    public CommentRepository(IDbContextFactory<ApplicationDbContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
     public async Task<List<Comment>> GetCommentsByPostIdAsync(int postId)
     {
-        var comments = await _context.Comments
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Comments
+            .Where(c => c.PostId == postId)
             .Include(c => c.User)
             .Include(c => c.MediaFiles)
-            .Include(c => c.Reactions).ThenInclude(r => r.User)
-            .Where(c => c.PostId == postId)
-            .OrderBy(c => c.CreatedAt)
-            .AsNoTracking()
+            .Include(c => c.Reactions)
+            .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
-        
-        // Build hierarchy
-        foreach (var comment in comments)
-        {
-            comment.Replies = comments.Where(c => c.ParentCommentId == comment.Id).ToList();
-        }
-        
-        return comments;
     }
 
     public async Task<Comment?> GetCommentByIdAsync(int id)
     {
-        return await _context.Comments
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Comments
+            .Include(c => c.User)
+            .Include(c => c.MediaFiles)
             .Include(c => c.Reactions)
-            .ThenInclude(r => r.User)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<Comment> CreateCommentAsync(Comment comment)
     {
-        _context.Comments.Add(comment);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Comments.Add(comment);
+        await context.SaveChangesAsync();
         return comment;
     }
 
     public async Task UpdateCommentAsync(Comment comment)
     {
-        _context.Comments.Update(comment);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Comments.Update(comment);
+        await context.SaveChangesAsync();
     }
 
     public async Task DeleteCommentAsync(int id)
     {
-        var comment = await _context.Comments.FindAsync(id);
+        using var context = _contextFactory.CreateDbContext();
+        var comment = await context.Comments.FindAsync(id);
         if (comment != null)
         {
-            _context.Comments.Remove(comment);
-            await _context.SaveChangesAsync();
+            context.Comments.Remove(comment);
+            await context.SaveChangesAsync();
         }
     }
 
     public async Task DeleteCommentWithRepliesAsync(int commentId, int postId)
     {
-        var allComments = await _context.Comments.Where(c => c.PostId == postId).ToListAsync();
-        DeleteCommentAndRepliesRecursive(commentId, allComments);
-        await _context.SaveChangesAsync();
-        _context.ChangeTracker.Clear();
-    }
+        using var context = _contextFactory.CreateDbContext();
 
-    private void DeleteCommentAndRepliesRecursive(int commentId, List<Comment> allComments)
-    {
-        var replies = allComments.Where(c => c.ParentCommentId == commentId).ToList();
-        foreach (var reply in replies)
+        // Delete all replies recursively.
+        // Use projection so reply entities are not tracked in this context;
+        // otherwise EF tries to fix-up their ParentCommentId when we remove
+        // the parent, but the recursive calls delete them in *other* contexts.
+        var replyIds = await context.Comments
+            .AsNoTracking()
+            .Where(c => c.ParentCommentId == commentId)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        foreach (var replyId in replyIds)
         {
-            DeleteCommentAndRepliesRecursive(reply.Id, allComments);
+            await DeleteCommentWithRepliesAsync(replyId, postId);
         }
-        var comment = allComments.FirstOrDefault(c => c.Id == commentId);
+
+        var comment = await context.Comments.FindAsync(commentId);
         if (comment != null)
         {
-            _context.Comments.Remove(comment);
+            context.Comments.Remove(comment);
+            await context.SaveChangesAsync();
         }
     }
 }

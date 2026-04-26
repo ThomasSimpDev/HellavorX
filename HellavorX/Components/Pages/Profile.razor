@@ -15,13 +15,23 @@
             <div class="px-6 pb-6">
                 <div class="flex items-end gap-4 -mt-16 mb-4">
                     <img src="@(user.ProfilePictureUrl ?? "/favicon.png")" class="w-32 h-32 rounded-full object-cover ring-4 ring-white shadow-lg" />
-                    <div class="flex-1 mt-16">
+                <div class="flex-1 mt-16">
                         <h2 class="text-2xl font-bold text-gray-900">@user.Name</h2>
                         <p class="text-gray-600">@@@user.UserName</p>
+                        <div class="flex gap-4 mt-2 text-sm text-gray-600">
+                            <span><strong class="text-gray-900">@followerCount</strong> Followers</span>
+                            <span><strong class="text-gray-900">@followingCount</strong> Following</span>
+                        </div>
                     </div>
                     @if (isOwnProfile)
                     {
                         <button class="px-6 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition mt-16" @onclick="ToggleEdit">Edit Profile</button>
+                    }
+                    else
+                    {
+                        <button class="px-6 py-2 @(isFollowing ? "bg-gray-200 text-gray-800" : "bg-blue-600 text-white") font-medium rounded-lg hover:opacity-90 transition mt-16" @onclick="ToggleFollow">
+                            @(isFollowing ? "Unfollow" : "Follow")
+                        </button>
                     }
                 </div>
                 

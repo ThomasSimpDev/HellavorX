@@ -6,16 +6,17 @@ namespace HellavorX.Repositories;
 
 public class PostRepository : IPostRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-    public PostRepository(ApplicationDbContext context)
+    public PostRepository(IDbContextFactory<ApplicationDbContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
     public async Task<List<Post>> GetAllPostsAsync()
     {
-        return await _context.Posts
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Posts
             .Include(p => p.User)
             .Include(p => p.MediaFiles)
             .Include(p => p.Comments)
@@ -27,7 +28,8 @@ public class PostRepository : IPostRepository
 
     public async Task<Post?> GetPostByIdAsync(int id)
     {
-        return await _context.Posts
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Posts
             .Include(p => p.User)
             .Include(p => p.MediaFiles)
             .Include(p => p.Reactions)
@@ -38,7 +40,8 @@ public class PostRepository : IPostRepository
 
     public async Task<List<Post>> GetPostsByUserIdAsync(string userId)
     {
-        return await _context.Posts
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Posts
             .Include(p => p.MediaFiles)
             .Include(p => p.Comments)
             .Include(p => p.Reactions)
@@ -48,26 +51,63 @@ public class PostRepository : IPostRepository
             .ToListAsync();
     }
 
+    public async Task<List<Post>> GetFeedForUserAsync(string userId, List<string> followingIds)
+    {
+        using var context = _contextFactory.CreateDbContext();
+        var feedUserIds = followingIds.ToList();
+        feedUserIds.Add(userId);
+
+        return await context.Posts
+            .Include(p => p.User)
+            .Include(p => p.MediaFiles)
+            .Include(p => p.Comments)
+            .Include(p => p.Reactions)
+            .ThenInclude(r => r.User)
+            .Where(p => feedUserIds.Contains(p.UserId))
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<Post>> SearchPostsAsync(string query)
+    {
+        using var context = _contextFactory.CreateDbContext();
+        var lowered = query.ToLower();
+        return await context.Posts
+            .Include(p => p.User)
+            .Include(p => p.MediaFiles)
+            .Include(p => p.Comments)
+            .Include(p => p.Reactions)
+            .ThenInclude(r => r.User)
+            .Where(p => p.Content.ToLower().Contains(lowered))
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(20)
+            .ToListAsync();
+    }
+
     public async Task<Post> CreatePostAsync(Post post)
     {
-        _context.Posts.Add(post);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Posts.Add(post);
+        await context.SaveChangesAsync();
         return post;
     }
 
     public async Task UpdatePostAsync(Post post)
     {
-        _context.Posts.Update(post);
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Posts.Update(post);
+        await context.SaveChangesAsync();
     }
 
     public async Task DeletePostAsync(int id)
     {
-        var post = await _context.Posts.FindAsync(id);
+        using var context = _contextFactory.CreateDbContext();
+        var post = await context.Posts.FindAsync(id);
         if (post != null)
         {
-            _context.Posts.Remove(post);
-            await _context.SaveChangesAsync();
+            context.Posts.Remove(post);
+            await context.SaveChangesAsync();
         }
     }
 }
+

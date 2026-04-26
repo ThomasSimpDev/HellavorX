@@ -59,6 +59,21 @@ h1:focus {
     text-align: start;
 }
 
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.2s ease-out forwards;
+}
+
 /* HellavorX Styles */
 
 .feed-container, .profile-container, .post-detail, .login-container, .signup-container {

@@ -1,0 +1,82 @@
+@page "/explore"
+@using HellavorX.Models
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<PageTitle>Explore - HellavorX</PageTitle>
+
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-xl font-semibold mb-2">Explore</h3>
+        <p class="text-gray-600 text-sm">Discover posts from everyone on HellavorX.</p>
+    </div>
+
+    @if (!posts.Any())
+    {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <p class="text-gray-500">No posts to explore yet.</p>
+        </div>
+    }
+
+    @foreach (var post in posts)
+    {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-visible hover:shadow-md transition relative">
+            <div class="p-6">
+                <div class="flex items-start gap-3 mb-4">
+                    <img src="@(post.User.ProfilePictureUrl ?? "/favicon.png")" class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100" />
+                    <div class="flex-1">
+                        <a href="/profile/@post.User.UserName" class="font-semibold text-gray-900 hover:text-blue-600 transition">@post.User.Name</a>
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <span>@@@post.User.UserName</span>
+                            <span>·</span>
+                            <span>@post.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-gray-800 mb-4 whitespace-pre-wrap leading-relaxed">@post.Content</p>
+
+                @if (post.MediaFiles.Any())
+                {
+                    <div class="space-y-3 mb-4">
+                        @foreach (var media in post.MediaFiles)
+                        {
+                            @if (media.Type == MediaType.Image)
+                            {
+                                <img src="@media.Url" class="w-full rounded-lg" />
+                            }
+                            else if (media.Type == MediaType.Audio)
+                            {
+                                <audio controls src="@media.Url" class="w-full"></audio>
+                            }
+                            else if (media.Type == MediaType.Video)
+                            {
+                                <video controls src="@media.Url" class="w-full rounded-lg"></video>
+                            }
+                            else if (media.Type == MediaType.File)
+                            {
+                                <a href="@media.Url" download class="inline-block text-blue-600 hover:underline">
+                                    @media.FileName
+                                </a>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="border-t border-gray-100 px-6 py-3 bg-gray-50">
+                <div class="flex items-center gap-4">
+                    <ReactionPicker PostId="@post.Id" ReactionCounts="@post.ReactionCounts" OnReaction="@((type) => TogglePostReaction(post.Id, type))" />
+                    <a href="/post/@post.Id" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0 4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span class="font-medium">@post.Comments.Count Comments</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

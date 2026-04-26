@@ -46,7 +46,10 @@ public partial class Home
 
     private async Task LoadPosts()
     {
-        posts = await PostService.GetAllPostsAsync();
+        if (currentUserId != null)
+        {
+            posts = await PostService.GetFeedForUserAsync(currentUserId);
+        }
     }
 
     private async Task TogglePostReaction(int postId, ReactionType type)

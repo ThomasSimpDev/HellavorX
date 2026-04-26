@@ -6,28 +6,41 @@ namespace HellavorX.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
-    public UserRepository(ApplicationDbContext context)
+    public UserRepository(IDbContextFactory<ApplicationDbContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
     public async Task<ApplicationUser?> GetUserByUsernameAsync(string username)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Users.FirstOrDefaultAsync(u => u.UserName == username);
     }
 
     public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
     {
-        return await _context.Users.FindAsync(userId);
+        using var context = _contextFactory.CreateDbContext();
+        return await context.Users.FindAsync(userId);
+    }
+
+    public async Task<List<ApplicationUser>> SearchUsersAsync(string query)
+    {
+        using var context = _contextFactory.CreateDbContext();
+        var lowered = query.ToLower();
+        return await context.Users
+            .Where(u => u.UserName != null && (u.UserName.ToLower().Contains(lowered) || u.Name.ToLower().Contains(lowered)))
+            .OrderBy(u => u.Name)
+            .Take(20)
+            .ToListAsync();
     }
 
     public async Task UpdateUserAsync(ApplicationUser user)
     {
-        // Note: Don't call Update() here - the entity is already tracked by the context
-        // (e.g., when fetched with FindAsync). Calling Update() on an already-tracked
-        // entity can cause issues with change tracking in EF Core.
-        await _context.SaveChangesAsync();
+        using var context = _contextFactory.CreateDbContext();
+        context.Users.Update(user);
+        await context.SaveChangesAsync();
     }
 }
+

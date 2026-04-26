@@ -23,6 +23,13 @@ public class UserService : IUserService
         return await _userRepository.GetUserByUsernameAsync(username);
     }
 
+    public async Task<List<ApplicationUser>> SearchUsersAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return new List<ApplicationUser>();
+        return await _userRepository.SearchUsersAsync(query);
+    }
+
     public async Task UpdateUserProfileAsync(string userId, string name, string bio, SelectedFile? profilePicture)
     {
         try

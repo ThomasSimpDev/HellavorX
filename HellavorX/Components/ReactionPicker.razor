@@ -2,40 +2,35 @@
 @using System.Collections.Generic
 
 <div class="relative inline-flex" @onmouseenter="OpenPopup" @onmouseleave="ClosePopup">
-    <button class="flex items-center gap-1 p-2 rounded-lg hover:bg-gray-200 transition text-gray-600 group" @onclick="QuickLike">
-        <svg class="w-5 h-5 stroke-current @(IsReacted ? "fill-blue-500 stroke-blue-500" : "hover:stroke-blue-600")" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M14 10h-2l-1-3H9v3H7V7h4l1 3h2v2zm-2 6V9h-2v7h2zm-7 0h6v-9H5v9z"/>
-        </svg>
-        <span class="font-medium">@TotalCount</span>
+    <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition text-gray-600 group" @onclick="QuickLike">
+        @if (UserReaction.HasValue)
+        {
+            <span class="text-lg leading-none">@GetReactionEmoji(UserReaction.Value)</span>
+            <span class="font-medium text-sm @GetReactionColorClass(UserReaction.Value)">@GetReactionLabel(UserReaction.Value)</span>
+        }
+        else
+        {
+            <svg class="w-5 h-5 @(IsReacted ? "fill-blue-500 text-blue-500" : "text-gray-500 group-hover:text-blue-600")" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 10 5.123 10h.907c.445 0 .72.498.523.898a8.812 8.812 0 01-.27.602z" />
+            </svg>
+            <span class="font-medium text-sm">Like</span>
+        }
+        @if (TotalCount > 0)
+        {
+            <span class="text-xs text-gray-500 ml-0.5">@TotalCount</span>
+        }
     </button>
-    
+
     @if (showPopup)
     {
-        <div class="absolute bottom-full left-0 mb-2 w-56 bg-white border shadow-2xl rounded-xl p-2 z-[9999] backdrop-blur-sm border-gray-200 flex flex-wrap gap-1 pointer-events-auto transition-all duration-200 opacity-100 translate-y-0">
-            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Like)" title="Like">
-                👍
-                <span class="text-xs text-gray-600">@LikeCount</span>
-            </button>
-            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Love)" title="Love">
-                ❤️
-                <span class="text-xs text-gray-600">@LoveCount</span>
-            </button>
-            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Haha)" title="Haha">
-                😂
-                <span class="text-xs text-gray-600">@HahaCount</span>
-            </button>
-            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Wow)" title="Wow">
-                😮
-                <span class="text-xs text-gray-600">@WowCount</span>
-            </button>
-            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Sad)" title="Sad">
-                😢
-                <span class="text-xs text-gray-600">@SadCount</span>
-            </button>
-            <button class="flex flex-col items-center p-2 hover:bg-gray-100 rounded-lg text-lg gap-0.5 min-w-[44px]" @onclick="() => SelectReaction(ReactionType.Angry)" title="Angry">
-                😠
-                <span class="text-xs text-gray-600">@AngryCount</span>
-            </button>
+        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white shadow-xl rounded-full px-2 py-1.5 z-[9999] border border-gray-200 flex items-center gap-0.5 pointer-events-auto animate-fade-in-up">
+            @foreach (var reaction in ReactionOptions)
+            {
+                <button class="flex flex-col items-center justify-center p-1.5 hover:bg-gray-100 rounded-full transition-transform hover:scale-110 min-w-[40px]" @onclick="() => SelectReaction(reaction.Type)" title="@reaction.Label">
+                    <span class="text-2xl leading-none">@reaction.Emoji</span>
+                    <span class="text-[10px] text-gray-500 mt-0.5 font-medium">@reaction.Count</span>
+                </button>
+            }
         </div>
     }
 </div>
@@ -50,19 +45,81 @@
     private bool IsReacted => UserReaction.HasValue;
     private bool showPopup = false;
 
+    private record ReactionOption(ReactionType Type, string Emoji, string Label, int Count);
+
+    private List<ReactionOption> ReactionOptions => new()
+    {
+        new(ReactionType.Like, "👍", "Like", ReactionCounts?.GetValueOrDefault(ReactionType.Like, 0) ?? 0),
+        new(ReactionType.Love, "❤️", "Love", ReactionCounts?.GetValueOrDefault(ReactionType.Love, 0) ?? 0),
+        new(ReactionType.Haha, "😂", "Haha", ReactionCounts?.GetValueOrDefault(ReactionType.Haha, 0) ?? 0),
+        new(ReactionType.Wow, "😮", "Wow", ReactionCounts?.GetValueOrDefault(ReactionType.Wow, 0) ?? 0),
+        new(ReactionType.Sad, "😢", "Sad", ReactionCounts?.GetValueOrDefault(ReactionType.Sad, 0) ?? 0),
+        new(ReactionType.Angry, "😠", "Angry", ReactionCounts?.GetValueOrDefault(ReactionType.Angry, 0) ?? 0),
+    };
+
+    private static string GetReactionEmoji(ReactionType type) => type switch
+    {
+        ReactionType.Like => "👍",
+        ReactionType.Love => "❤️",
+        ReactionType.Haha => "😂",
+        ReactionType.Wow => "😮",
+        ReactionType.Sad => "😢",
+        ReactionType.Angry => "😠",
+        _ => "👍"
+    };
+
+    private static string GetReactionLabel(ReactionType type) => type switch
+    {
+        ReactionType.Like => "Like",
+        ReactionType.Love => "Love",
+        ReactionType.Haha => "Haha",
+        ReactionType.Wow => "Wow",
+        ReactionType.Sad => "Sad",
+        ReactionType.Angry => "Angry",
+        _ => "Like"
+    };
+
+    private static string GetReactionColorClass(ReactionType type) => type switch
+    {
+        ReactionType.Like => "text-blue-600",
+        ReactionType.Love => "text-red-500",
+        ReactionType.Haha => "text-yellow-500",
+        ReactionType.Wow => "text-yellow-500",
+        ReactionType.Sad => "text-yellow-600",
+        ReactionType.Angry => "text-orange-600",
+        _ => "text-blue-600"
+    };
+
     private async Task QuickLike()
     {
         await SelectReaction(ReactionType.Like);
     }
 
+    private System.Timers.Timer? closeTimer;
+
     private void OpenPopup()
     {
+        closeTimer?.Stop();
+        closeTimer?.Dispose();
+        closeTimer = null;
         showPopup = true;
     }
 
     private void ClosePopup()
     {
-        showPopup = false;
+        closeTimer = new System.Timers.Timer(150);
+        closeTimer.Elapsed += (s, e) =>
+        {
+            InvokeAsync(() =>
+            {
+                showPopup = false;
+                StateHasChanged();
+            });
+            closeTimer?.Dispose();
+            closeTimer = null;
+        };
+        closeTimer.AutoReset = false;
+        closeTimer.Start();
     }
 
     private async Task SelectReaction(ReactionType type)
@@ -72,10 +129,5 @@
     }
 
     private int TotalCount => ReactionCounts?.Values.Sum() ?? 0;
-    private int LikeCount => ReactionCounts?.GetValueOrDefault(ReactionType.Like, 0) ?? 0;
-    private int LoveCount => ReactionCounts?.GetValueOrDefault(ReactionType.Love, 0) ?? 0;
-    private int HahaCount => ReactionCounts?.GetValueOrDefault(ReactionType.Haha, 0) ?? 0;
-    private int WowCount => ReactionCounts?.GetValueOrDefault(ReactionType.Wow, 0) ?? 0;
-    private int SadCount => ReactionCounts?.GetValueOrDefault(ReactionType.Sad, 0) ?? 0;
-    private int AngryCount => ReactionCounts?.GetValueOrDefault(ReactionType.Angry, 0) ?? 0;
 }
+
