@@ -105,6 +105,23 @@ public class PostRepository : IPostRepository
         var post = await context.Posts.FindAsync(id);
         if (post != null)
         {
+            // Remove reactions linked directly to the post
+            var postReactions = await context.Reactions.Where(r => r.PostId == id).ToListAsync();
+            context.Reactions.RemoveRange(postReactions);
+
+            // Remove reactions linked to the post's comments (comments cascade, but their reactions do not)
+            var commentIds = await context.Comments.Where(c => c.PostId == id).Select(c => c.Id).ToListAsync();
+            var commentReactions = await context.Reactions.Where(r => commentIds.Contains(r.CommentId!.Value)).ToListAsync();
+            context.Reactions.RemoveRange(commentReactions);
+
+            // Remove media linked directly to the post
+            var postMedia = await context.MediaFiles.Where(m => m.PostId == id).ToListAsync();
+            context.MediaFiles.RemoveRange(postMedia);
+
+            // Remove media linked to the post's comments
+            var commentMedia = await context.MediaFiles.Where(m => commentIds.Contains(m.CommentId!.Value)).ToListAsync();
+            context.MediaFiles.RemoveRange(commentMedia);
+
             context.Posts.Remove(post);
             await context.SaveChangesAsync();
         }

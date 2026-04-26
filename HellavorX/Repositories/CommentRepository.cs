@@ -56,6 +56,12 @@ public class CommentRepository : ICommentRepository
         var comment = await context.Comments.FindAsync(id);
         if (comment != null)
         {
+            var reactions = await context.Reactions.Where(r => r.CommentId == id).ToListAsync();
+            context.Reactions.RemoveRange(reactions);
+
+            var media = await context.MediaFiles.Where(m => m.CommentId == id).ToListAsync();
+            context.MediaFiles.RemoveRange(media);
+
             context.Comments.Remove(comment);
             await context.SaveChangesAsync();
         }
@@ -83,6 +89,12 @@ public class CommentRepository : ICommentRepository
         var comment = await context.Comments.FindAsync(commentId);
         if (comment != null)
         {
+            var reactions = await context.Reactions.Where(r => r.CommentId == commentId).ToListAsync();
+            context.Reactions.RemoveRange(reactions);
+
+            var media = await context.MediaFiles.Where(m => m.CommentId == commentId).ToListAsync();
+            context.MediaFiles.RemoveRange(media);
+
             context.Comments.Remove(comment);
             await context.SaveChangesAsync();
         }

@@ -15,6 +15,7 @@ public partial class Explore
     [Inject] private IReactionService ReactionService { get; set; } = default!;
 
     private List<Post> posts = new();
+    private Dictionary<int, ReactionType?> postUserReactions = new();
     private string? currentUserId;
 
     protected override async Task OnInitializedAsync()
@@ -35,11 +36,24 @@ public partial class Explore
     private async Task LoadPosts()
     {
         posts = await PostService.GetAllPostsAsync();
+        postUserReactions.Clear();
+        if (currentUserId != null)
+        {
+            foreach (var post in posts)
+            {
+                var reaction = await ReactionService.GetUserReactionAsync(post.Id, null, currentUserId);
+                postUserReactions[post.Id] = reaction;
+            }
+        }
     }
 
     private async Task TogglePostReaction(int postId, ReactionType type)
     {
         await ReactionService.ToggleReactionAsync(postId, null, currentUserId!, type);
+        if (currentUserId != null)
+        {
+            postUserReactions[postId] = await ReactionService.GetUserReactionAsync(postId, null, currentUserId);
+        }
         await LoadPosts();
     }
 }

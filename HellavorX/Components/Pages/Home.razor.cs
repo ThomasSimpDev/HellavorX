@@ -22,6 +22,7 @@ public partial class Home
     [Inject] protected IAntiforgery? Antiforgery { get; set; }
 
     private List<Post> posts = new();
+    private Dictionary<int, ReactionType?> postUserReactions = new();
     private CreatePostViewModel newPost = new();
     private List<SelectedFile> selectedFiles = new();
     private bool isPosting;
@@ -49,12 +50,22 @@ public partial class Home
         if (currentUserId != null)
         {
             posts = await PostService.GetFeedForUserAsync(currentUserId);
+            postUserReactions.Clear();
+            foreach (var post in posts)
+            {
+                var reaction = await ReactionService.GetUserReactionAsync(post.Id, null, currentUserId);
+                postUserReactions[post.Id] = reaction;
+            }
         }
     }
 
     private async Task TogglePostReaction(int postId, ReactionType type)
     {
         await ReactionService.ToggleReactionAsync(postId, null, currentUserId!, type);
+        if (currentUserId != null)
+        {
+            postUserReactions[postId] = await ReactionService.GetUserReactionAsync(postId, null, currentUserId);
+        }
         await LoadPosts();
     }
 
