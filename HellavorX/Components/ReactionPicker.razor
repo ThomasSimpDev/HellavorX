@@ -90,7 +90,14 @@
 
     private async Task QuickLike()
     {
-        await SelectReaction(ReactionType.Like);
+        if (UserReaction.HasValue)
+        {
+            await SelectReaction(UserReaction.Value);
+        }
+        else
+        {
+            await SelectReaction(ReactionType.Like);
+        }
     }
 
     private System.Timers.Timer? closeTimer;
