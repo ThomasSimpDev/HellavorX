@@ -21,7 +21,7 @@ public partial class Home
     [Inject] protected IHttpContextAccessor? HttpContextAccessor { get; set; }
     [Inject] protected IAntiforgery? Antiforgery { get; set; }
 
-    private List<Post> posts = new();
+private List<Post> posts = new();
     private Dictionary<int, ReactionType?> postUserReactions = new();
     private CreatePostViewModel newPost = new();
     private List<SelectedFile> selectedFiles = new();
@@ -29,6 +29,12 @@ public partial class Home
     private string? currentUserId;
     private int? editPostId;
     private EditPostViewModel editModel = new();
+    
+    // Pagination support
+    private int _currentPage = 0;
+    private const int _pageSize = 10;
+    private bool _hasMore = true;
+    private bool _isLoadingMore = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,11 +51,13 @@ public partial class Home
         await LoadPosts();
     }
 
-    private async Task LoadPosts()
+private async Task LoadPosts()
     {
         if (currentUserId != null)
         {
-            posts = await PostService.GetFeedForUserAsync(currentUserId);
+            _currentPage = 0;
+            posts = await PostService.GetFeedForUserAsync(currentUserId, 0, _pageSize);
+            _hasMore = posts.Count >= _pageSize;
             postUserReactions.Clear();
             foreach (var post in posts)
             {
@@ -57,6 +65,33 @@ public partial class Home
                 postUserReactions[post.Id] = reaction;
             }
         }
+    }
+
+private async Task LoadMorePosts()
+    {
+        if (_isLoadingMore || !_hasMore || currentUserId == null)
+            return;
+
+        _isLoadingMore = true;
+        _currentPage++;
+        
+        var morePosts = await PostService.GetFeedForUserAsync(currentUserId, _currentPage * _pageSize, _pageSize);
+        _hasMore = morePosts.Count >= _pageSize;
+        
+        foreach (var post in morePosts)
+        {
+            posts.Add(post);
+            var reaction = await ReactionService.GetUserReactionAsync(post.Id, null, currentUserId);
+            postUserReactions[post.Id] = reaction;
+        }
+        
+        _isLoadingMore = false;
+    }
+
+    private async Task OnScroll()
+    {
+        // This method can be called from JS interop when user scrolls to bottom
+        await LoadMorePosts();
     }
 
     private async Task TogglePostReaction(int postId, ReactionType type)
@@ -95,7 +130,7 @@ public partial class Home
         selectedFiles.Remove(file);
     }
 
-    private async Task CreatePost()
+private async Task CreatePost()
     {
         if (string.IsNullOrWhiteSpace(newPost.Content) && !selectedFiles.Any())
             return;

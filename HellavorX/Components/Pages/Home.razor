@@ -2,6 +2,7 @@
 @using HellavorX.Models
 @using HellavorX.ViewModels
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
 @attribute [Authorize]
 @rendermode InteractiveServer
 
@@ -132,7 +133,7 @@
                 }
             </div>
 
-            <div class="border-t border-gray-100 px-6 py-3 bg-gray-50">
+<div class="border-t border-gray-100 px-6 py-3 bg-gray-50">
                 <div class="flex items-center gap-4">
 <ReactionPicker PostId="@post.Id" ReactionCounts="@post.ReactionCounts" OnReaction="@((type) => TogglePostReaction(post.Id, type))" UserReaction="@postUserReactions.GetValueOrDefault(post.Id)" />
                     <a href="/post/@post.Id" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition">
@@ -143,6 +144,15 @@
                     </a>
                 </div>
             </div>
+        </div>
+    }
+
+@if (_hasMore)
+    {
+        <div class="py-4 text-center">
+            <button @onclick="LoadMorePosts" class="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition disabled:opacity-50" disabled="@_isLoadingMore">
+                @(_isLoadingMore ? "Loading..." : "Load More")
+            </button>
         </div>
     }
 </div>

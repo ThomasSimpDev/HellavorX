@@ -23,9 +23,9 @@ public class PostService : IPostService
         _logger = logger;
     }
 
-    public async Task<List<Post>> GetAllPostsAsync()
+public async Task<List<Post>> GetAllPostsAsync(int skip = 0, int take = 20)
     {
-        return await _postRepository.GetAllPostsAsync();
+        return await _postRepository.GetAllPostsAsync(skip, take);
     }
 
     public async Task<Post?> GetPostByIdAsync(int id)
@@ -33,22 +33,22 @@ public class PostService : IPostService
         return await _postRepository.GetPostByIdAsync(id);
     }
 
-    public async Task<List<Post>> GetPostsByUserIdAsync(string userId)
+    public async Task<List<Post>> GetPostsByUserIdAsync(string userId, int skip = 0, int take = 20)
     {
-        return await _postRepository.GetPostsByUserIdAsync(userId);
+        return await _postRepository.GetPostsByUserIdAsync(userId, skip, take);
     }
 
-    public async Task<List<Post>> GetFeedForUserAsync(string userId)
+    public async Task<List<Post>> GetFeedForUserAsync(string userId, int skip = 0, int take = 20)
     {
         var followingIds = await _followService.GetFollowingIdsAsync(userId);
-        return await _postRepository.GetFeedForUserAsync(userId, followingIds);
+        return await _postRepository.GetFeedForUserAsync(userId, followingIds, skip, take);
     }
 
-    public async Task<List<Post>> SearchPostsAsync(string query)
+    public async Task<List<Post>> SearchPostsAsync(string query, int skip = 0, int take = 20)
     {
         if (string.IsNullOrWhiteSpace(query))
             return new List<Post>();
-        return await _postRepository.SearchPostsAsync(query);
+        return await _postRepository.SearchPostsAsync(query, skip, take);
     }
 
     public async Task<Post> CreatePostAsync(string content, string userId, List<SelectedFile> files)

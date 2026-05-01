@@ -10,10 +10,10 @@ public class PostRepository : IPostRepository
 
     public PostRepository(IDbContextFactory<ApplicationDbContext> contextFactory)
     {
-        _contextFactory = contextFactory;
+    _contextFactory = contextFactory;
     }
 
-    public async Task<List<Post>> GetAllPostsAsync()
+    public async Task<List<Post>> GetAllPostsAsync(int skip = 0, int take = 20)
     {
         using var context = _contextFactory.CreateDbContext();
         return await context.Posts
@@ -23,6 +23,8 @@ public class PostRepository : IPostRepository
             .Include(p => p.Reactions)
             .ThenInclude(r => r.User)
             .OrderByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
     }
 
@@ -38,7 +40,7 @@ public class PostRepository : IPostRepository
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<List<Post>> GetPostsByUserIdAsync(string userId)
+    public async Task<List<Post>> GetPostsByUserIdAsync(string userId, int skip = 0, int take = 20)
     {
         using var context = _contextFactory.CreateDbContext();
         return await context.Posts
@@ -48,10 +50,12 @@ public class PostRepository : IPostRepository
             .ThenInclude(r => r.User)
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
     }
 
-    public async Task<List<Post>> GetFeedForUserAsync(string userId, List<string> followingIds)
+    public async Task<List<Post>> GetFeedForUserAsync(string userId, List<string> followingIds, int skip = 0, int take = 20)
     {
         using var context = _contextFactory.CreateDbContext();
         var feedUserIds = followingIds.ToList();
@@ -65,10 +69,12 @@ public class PostRepository : IPostRepository
             .ThenInclude(r => r.User)
             .Where(p => feedUserIds.Contains(p.UserId))
             .OrderByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
     }
 
-    public async Task<List<Post>> SearchPostsAsync(string query)
+    public async Task<List<Post>> SearchPostsAsync(string query, int skip = 0, int take = 20)
     {
         using var context = _contextFactory.CreateDbContext();
         var lowered = query.ToLower();
@@ -80,7 +86,8 @@ public class PostRepository : IPostRepository
             .ThenInclude(r => r.User)
             .Where(p => p.Content.ToLower().Contains(lowered))
             .OrderByDescending(p => p.CreatedAt)
-            .Take(20)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync();
     }
 
